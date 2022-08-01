@@ -1,4 +1,4 @@
-import urllib2
+from urllib.request import urlopen
 from bs4 import BeautifulSoup
 import pdb
 import datetime
@@ -25,12 +25,13 @@ url = 'https://cinecartaz.publico.pt'
 
 
 def get_publico_releases():
-    page = urllib2.urlopen(url + releases_endpoint)
+    # Fetch web page
+    page = urlopen(url + releases_endpoint).read()
     soup = BeautifulSoup(page, 'html.parser')
     boxes = soup.find_all(class_="box")
 
-    result_obj = list()
-
+    # Build list of release dates
+    result_obj = []
     for box in boxes:
         title_span = box.find(class_="boxtitle")
         title= title_span.text
@@ -50,8 +51,9 @@ def get_publico_releases():
 
         movies = box.find_all(class_="blocklink")
         for movie in movies:
+            # Get original movie title
             movie_url = url + movie["href"]
-            movie_page = urllib2.urlopen(movie_url)
+            movie_page = urlopen(movie_url).read()
             movie_soup = BeautifulSoup(movie_page, 'html.parser')
 
             movie_title = movie_soup.find("dd").text
