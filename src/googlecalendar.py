@@ -30,6 +30,23 @@ def publish_to_calendar(releases):
                         'timeZone': 'Europe/Lisbon'
                     }
                 }
+                service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
+
 
     except HttpError as error:
         print('An error occurred: %s' % error)
+
+def clear_calendar():
+    creds = service_account.Credentials.from_service_account_file(
+        'client_secret.json', scopes=SCOPES
+    )
+
+    service = build('calendar', 'v3', credentials=creds)
+    page_token = None
+    while True:
+        events = service.events().list(calendarId=CALENDAR_ID, pageToken=page_token).execute()
+        for event in events['items']:
+            service.events().delete(calendarId=CALENDAR_ID, eventId=event['id']).execute()
+        page_token = events.get('nextPageToken')
+        if not page_token:
+            break
