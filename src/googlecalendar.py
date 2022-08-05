@@ -3,22 +3,33 @@ from googleapiclient.discovery import build
 import datetime
 from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
+import pdb
 
 
 SERVICE_ACCOUNT_FILE = 'client_secret.json'
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 CALENDAR_ID = "h7s9ktaog3hm0bofal9hurvpic@group.calendar.google.com"
 
-def publish_to_calendar(releases):
+def calendar_service():
     creds = service_account.Credentials.from_service_account_file(
         'client_secret.json', scopes=SCOPES
     )
 
-    try:
-        service = build('calendar', 'v3', credentials=creds)
-        for release_date in releases:
-            release_datetime = datetime.date.fromisoformat(release_date['date'])
-            for movie in release_date["movies"]:
+    service = build('calendar', 'v3', credentials=creds)
+    return service
+
+def publish_to_calendar(releases):
+    service = calendar_service()
+    events = service.events().list(calendarId=CALENDAR_ID).execute()
+    created_events =  {}
+    for event in events['items']:
+        created_events[event['summary']] = True
+
+    for release_date in releases:
+        release_datetime = datetime.date.fromisoformat(release_date['date'])
+        for movie in release_date["movies"]:
+            if movie not in created_events.keys():
+                print("Inserted {}".format(movie))
                 event = {
                     'summary': movie,
                     'start': {
@@ -32,16 +43,8 @@ def publish_to_calendar(releases):
                 }
                 service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
 
-
-    except HttpError as error:
-        print('An error occurred: %s' % error)
-
 def clear_calendar():
-    creds = service_account.Credentials.from_service_account_file(
-        'client_secret.json', scopes=SCOPES
-    )
-
-    service = build('calendar', 'v3', credentials=creds)
+    service = calendar_service()
     page_token = None
     while True:
         events = service.events().list(calendarId=CALENDAR_ID, pageToken=page_token).execute()
