@@ -4,21 +4,21 @@ import datetime
 import pprint
 
 months = [
-    "Jan",
-    "Fev",
-    "Mar",
-    "Abr",
-    "Mai",
-    "Jun",
-    "Jul",
-    "Ago",
-    "Set",
-    "Out",
-    "Nov",
-    "Dez"
+    "janeiro",
+    "fevereiro",
+    "março",
+    "abril",
+    "maio",
+    "junho",
+    "julho",
+    "agosto",
+    "setembro",
+    "outubro",
+    "novembro",
+    "dezembro"
 ]
 
-releases_endpoint = '/Brevemente'
+releases_endpoint = '/em-breve'
 url = 'https://cinecartaz.publico.pt'
 
 
@@ -26,18 +26,22 @@ def get_publico_releases():
     # Fetch web page
     page = urlopen(url + releases_endpoint).read()
     soup = BeautifulSoup(page, 'html.parser')
-    boxes = soup.find_all(class_="box")
+
+    # Split release day sections
+    release_date_sections = soup.find_all(class_="collection")
 
     # Build list of release dates
     result_obj = []
-    for box in boxes:
-        title_span = box.find(class_="boxtitle")
-        title= title_span.text
-        title = title.split(" ")
-        day = title[4]
-        month = title[6]
+    for release_date_section in release_date_sections:
+        # Convert date text to datetime date
+        date_header = release_date_section.find(class_="collection__title")
+        date_text = date_header.text
+        date_text_split = date_text.split(" ")
+        day = date_text_split[-3]
+        month = date_text_split[-1]
         month_number = months.index(month) + 1
-        year = title[8]
+        # TODO: Logic for new year
+        year = datetime.date.today().year
 
         date = datetime.date(int(year), month_number, int(day))
         date_iso_format = date.isoformat()
@@ -47,14 +51,14 @@ def get_publico_releases():
             "movies": []
         }
 
-        movies = box.find_all(class_="blocklink")
+        movies = release_date_section.find_all(class_="block-link")
         for movie in movies:
             # Get original movie title
             movie_url = url + movie["href"]
             movie_page = urlopen(movie_url).read()
             movie_soup = BeautifulSoup(movie_page, 'html.parser')
 
-            movie_title = movie_soup.find("dd").text
+            movie_title = movie_soup.find_all("div", class_="boxed")[0].text.strip()
             day_releases['movies'].append(movie_title)
         result_obj.append(day_releases)
     return result_obj
