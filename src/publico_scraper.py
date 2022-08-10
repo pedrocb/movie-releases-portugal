@@ -31,7 +31,7 @@ def get_publico_releases():
     release_date_sections = soup.find_all(class_="collection")
 
     # Build list of release dates
-    result_obj = []
+    releases = []
     for release_date_section in release_date_sections:
         # Convert date text to datetime date
         date_header = release_date_section.find(class_="collection__title")
@@ -59,9 +59,11 @@ def get_publico_releases():
             movie_soup = BeautifulSoup(movie_page, 'html.parser')
 
             movie_title = movie_soup.find_all("div", class_="boxed")[0].text.strip()
-            day_releases['movies'].append(movie_title)
-        result_obj.append(day_releases)
-    return result_obj
+            releases.append({
+                "date": date_iso_format,
+                "title": movie_title
+            })
+    return releases
 
 if __name__ == '__main__':
     releases = get_publico_releases()

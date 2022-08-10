@@ -32,23 +32,22 @@ def publish_to_calendar(releases):
 
     print("Got Events")
 
-    for release_date in releases:
-        release_datetime = datetime.date.fromisoformat(release_date['date'])
-        for movie in release_date["movies"]:
-            if movie not in created_events.keys():
-                print("Inserted {}".format(movie))
-                event = {
-                    'summary': movie,
-                    'start': {
-                        'date': release_datetime.isoformat(),
-                        'timeZone': 'Europe/Lisbon'
-                    },
-                    'end': {
-                        'date': release_datetime.isoformat(),
-                        'timeZone': 'Europe/Lisbon'
-                    }
+    for release in releases:
+        if release["title"] not in created_events.keys():
+            release_datetime = datetime.date.fromisoformat(release['date'])
+            print("Inserted {}".format(release["title"]))
+            event = {
+                'summary': release["title"],
+                'start': {
+                    'date': release_datetime.isoformat(),
+                    'timeZone': 'Europe/Lisbon'
+                },
+                'end': {
+                    'date': release_datetime.isoformat(),
+                    'timeZone': 'Europe/Lisbon'
                 }
-                service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
+            }
+            service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
 
 def clear_calendar():
     service = calendar_service()
