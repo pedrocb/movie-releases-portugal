@@ -23,8 +23,10 @@ resource "aws_iam_role" "github_actions" {
                 "Federated": "arn:aws:iam::${data.aws_caller_identity.current.account_id}:oidc-provider/token.actions.githubusercontent.com"
             },
             "Condition": {
-                "ForAllValues:StringEquals": {
-                    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com",
+                "StringEquals": {
+                    "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                },
+                "StringLike": {
                     "token.actions.githubusercontent.com:sub": "repo:pedrocb/movie-releases-portugal:*"
                 }
             }
@@ -32,4 +34,35 @@ resource "aws_iam_role" "github_actions" {
     ]
 }
 EOF
+}
+
+resource "aws_iam_policy" "build_push_ecr" {
+  name = "BuildPublishECR"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+	Effect =  "Allow",
+	Action = [
+	  "ecr:CompleteLayerUpload",
+	  "ecr:UploadLayerPart",
+	  "ecr:InitiateLayerUpload",
+	  "ecr:BatchCheckLayerAvailability",
+	  "ecr:PutImage"
+	],
+	Resource = "${aws_ecr_repository.movie_releases_pt.arn}"
+      },
+      {
+	Effect = "Allow",
+	Action = "ecr:GetAuthorizationToken",
+	Resource = "*"
+      }
+    ]
+  })
+
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_build_publish_ecr" {
+  role = aws_iam_role.github_actions.name
+  policy_arn = aws_iam_policy.build_push_ecr.arn
 }
