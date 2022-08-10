@@ -3,6 +3,29 @@ resource "aws_ecr_repository" "movie_releases_pt" {
   force_delete = true
 }
 
+resource "aws_ecr_lifecycle_policy" "cleanup" {
+  repository = aws_ecr_repository.movie_releases_pt.name
+
+  policy = <<EOF
+{
+    "rules": [
+        {
+            "rulePriority": 1,
+            "description": "Keep last 1 images",
+            "selection": {
+                "tagStatus": "any",
+                "countType": "imageCountMoreThan",
+                "countNumber": 1
+            },
+            "action": {
+                "type": "expire"
+            }
+        }
+    ]
+}
+EOF
+}
+
 resource "aws_iam_role" "movie_releases_pt_lambda" {
   name = "movie-releases-iam-lambda"
   assume_role_policy = <<EOF
