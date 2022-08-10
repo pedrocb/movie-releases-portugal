@@ -20,10 +20,17 @@ def calendar_service():
 
 def publish_to_calendar(releases):
     service = calendar_service()
-    events = service.events().list(calendarId=CALENDAR_ID).execute()
+    page_token = None
     created_events =  {}
-    for event in events['items']:
-        created_events[event['summary']] = True
+    while True:
+        events = service.events().list(calendarId=CALENDAR_ID, pageToken=page_token).execute()
+        for event in events['items']:
+            created_events[event['summary']] = True
+        page_token = events.get('nextPageToken')
+        if not page_token:
+            break
+
+    print("Got Events")
 
     for release_date in releases:
         release_datetime = datetime.date.fromisoformat(release_date['date'])
