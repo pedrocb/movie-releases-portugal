@@ -4,13 +4,24 @@ import datetime
 from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
 import pdb
-
+import boto3
+import os.path
 
 SERVICE_ACCOUNT_FILE = 'client_secret.json'
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
 CALENDAR_ID = "h7s9ktaog3hm0bofal9hurvpic@group.calendar.google.com"
 
 def calendar_service():
+    if not os.path.isfile('client_secret.json'):
+        client = boto3.client('secretsmanager', region_name='eu-west-1')
+
+        response = client.get_secret_value(
+            SecretId='movie-releases-gcp'
+        )
+        with open('client_secret.json', "w") as fd:
+            fd.write(response['SecretString'])
+
+
     creds = service_account.Credentials.from_service_account_file(
         'client_secret.json', scopes=SCOPES
     )
