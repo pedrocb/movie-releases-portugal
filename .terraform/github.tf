@@ -62,7 +62,29 @@ resource "aws_iam_policy" "build_push_ecr" {
 
 }
 
+resource "aws_iam_policy" "update_lambda_function" {
+  name = "UpdateLambdaFunction"
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+	Effect =  "Allow",
+	Action = [
+	  "lambda:UpdateFunctionCode",
+	],
+	Resource = "${aws_lambda_function.movie_releases_pt.arn}"
+      },
+    ]
+  })
+
+}
+
 resource "aws_iam_role_policy_attachment" "github_actions_build_publish_ecr" {
   role = aws_iam_role.github_actions.name
   policy_arn = aws_iam_policy.build_push_ecr.arn
+}
+
+resource "aws_iam_role_policy_attachment" "github_actions_update_lambda_function" {
+  role = aws_iam_role.github_actions.name
+  policy_arn = aws_iam_policy.update_lambda_function.arn
 }
