@@ -5,6 +5,7 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
 import pdb
 import boto3
+import json
 import os.path
 
 SERVICE_ACCOUNT_FILE = 'client_secret.json'
@@ -18,13 +19,13 @@ def calendar_service():
         response = client.get_secret_value(
             SecretId='movie-releases-gcp'
         )
-        with open('client_secret.json', "w") as fd:
-            fd.write(response['SecretString'])
-
-
-    creds = service_account.Credentials.from_service_account_file(
-        'client_secret.json', scopes=SCOPES
-    )
+        creds = service_account.Credentials.from_service_account_info(
+            json.loads(response['SecretString']), scopes=SCOPES
+        )
+    else:
+        creds = service_account.Credentials.from_service_account_file(
+            'client_secret.json', scopes=SCOPES
+        )
 
     service = build('calendar', 'v3', credentials=creds)
     return service
