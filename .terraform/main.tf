@@ -43,10 +43,45 @@ resource "aws_iam_role" "movie_releases_pt_lambda" {
 EOF
 }
 
+data "aws_region" "current" {}
+
+resource "aws_iam_policy" "secret_access" {
+  name = "secret_access"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow",
+        Action = [
+	  "secretsmanager:GetResourcePolicy",
+	  "secretsmanager:GetSecretValue",
+	  "secretsmanager:DescribeSecret",
+	  "secretsmanager:ListSecretVersionIds"
+	],
+	Resource = [
+	  "arn:aws:secretsmanager:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:secret:movie-releases-gcp-FyT222"
+	]
+      },
+      {
+	Effect = "Allow",
+	Action = "secretsmanager:ListSecrets",
+	Resource = "*"
+      }
+    ]
+  })
+
+}
+
 resource "aws_iam_role_policy_attachment" "cloudwatch_logs" {
   role = aws_iam_role.movie_releases_pt_lambda.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+resource "aws_iam_role_policy_attachment" "secret_access" {
+  role = aws_iam_role.movie_releases_pt_lambda.name
+  policy_arn = aws_iam_policy.secret_access.arn
+}
+
 
 resource "aws_lambda_function" "movie_releases_pt" {
   function_name = "UpdateMovieReleasesDaily"
