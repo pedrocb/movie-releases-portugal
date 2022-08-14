@@ -1,9 +1,9 @@
-FROM python:3.7-slim
+FROM public.ecr.aws/lambda/python:3.9
 
 COPY requirements.txt .
 
 RUN pip install -r requirements.txt
- 
+
 COPY src .
 
-CMD ["python","main.py"]
+CMD ["main.handler"]
