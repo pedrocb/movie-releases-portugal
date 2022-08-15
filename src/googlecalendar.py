@@ -3,10 +3,11 @@ from googleapiclient.discovery import build
 import datetime
 from google.oauth2.credentials import Credentials
 from googleapiclient.errors import HttpError
-import pdb
+import base64
 import boto3
 import json
 import os.path
+import pdb
 
 SERVICE_ACCOUNT_FILE = 'client_secret.json'
 SCOPES = ["https://www.googleapis.com/auth/calendar"]
@@ -37,7 +38,8 @@ def publish_to_calendar(releases):
     while True:
         events = service.events().list(calendarId=CALENDAR_ID, pageToken=page_token).execute()
         for event in events['items']:
-            created_events[event['summary']] = True
+            if 'source' in event:
+                created_events[event['source']['title']] = True
         page_token = events.get('nextPageToken')
         if not page_token:
             break
@@ -47,9 +49,12 @@ def publish_to_calendar(releases):
     for release in releases:
         if release["title"] not in created_events.keys():
             release_datetime = datetime.date.fromisoformat(release['date'])
-            print("Inserted {}".format(release["title"]))
             event = {
                 'summary': release["title"],
+                'source': {
+                    'title': release["title"],
+                    'url': "https://placeholder"
+                },
                 'start': {
                     'date': release_datetime.isoformat(),
                     'timeZone': 'Europe/Lisbon'
@@ -60,6 +65,7 @@ def publish_to_calendar(releases):
                 }
             }
             service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
+            print("Inserted {}".format(release["title"]))
 
 def clear_calendar():
     service = calendar_service()
