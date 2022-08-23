@@ -42,7 +42,7 @@ def get_movie_releases():
             movie_data = {
                 "title": movie_title,
                 "date": date.isoformat(),
-                "summary": str(movie.find(class_="filmeListaInfo"))
+                "description": str(movie.find(class_="filmeListaInfo"))
             }
             releases.append(movie_data)
 

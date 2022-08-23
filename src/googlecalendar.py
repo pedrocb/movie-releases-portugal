@@ -51,6 +51,7 @@ def publish_to_calendar(releases):
             release_datetime = datetime.date.fromisoformat(release['date'])
             event = {
                 'summary': release["title"],
+                'description': release["description"],
                 'source': {
                     'title': release["title"],
                     'url': "https://placeholder"
